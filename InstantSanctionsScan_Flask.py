@@ -211,27 +211,29 @@ def clean_names(names):
 
 # Fetch and process sanctions lists
 def run_sanctions_check(businesses):
+    # Fetch OFAC list
     ofac_url = "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.CSV"
     ofac_csv_data = download_file_to_memory(ofac_url)
+    ofac_names = clean_names(extract_names_from_ofac_csv(ofac_csv_data) if ofac_csv_data else [])
 
-# Clean up the sanctions names
-    ofac_names = clean_names(ofac_names)
-    eu_names = clean_names(eu_names)
-    uk_names = clean_names(clean_names)
-    un_names = clean_names(un_names)
+    # Fetch EU, UK, and UN lists
+    eu_names = clean_names(fetch_eu_list() or [])
+    uk_names = clean_names(fetch_uk_list() or [])
+    un_names = clean_names(fetch_un_list() or [])
 
-
+    # Perform fuzzy matching for each sanctions list
     ofac_matches = fuzzy_match_names(businesses, ofac_names)
     eu_matches = fuzzy_match_names(businesses, eu_names)
     uk_matches = fuzzy_match_names(businesses, uk_names)
     un_matches = fuzzy_match_names(businesses, un_names)
-    
+
     return {
         "OFAC Matches": ofac_matches,
         "EU Matches": eu_matches,
         "UK Matches": uk_matches,
         "UN Matches": un_matches
     }
+
 
 # Fetch EU, UK, and UN lists
 def fetch_eu_list():
@@ -278,7 +280,7 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-# In[102]:
+# In[105]:
 
 
 #get_ipython().system('jupyter nbconvert --to script InstantSanctionsScan_Flask.ipynb')
