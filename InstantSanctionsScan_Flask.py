@@ -233,7 +233,7 @@ if __name__ == '__main__':
 # In[49]:
 
 
-get_ipython().system('jupyter nbconvert --to script InstantSanctionsScan_Flask.ipynb')
+#get_ipython().system('jupyter nbconvert --to script InstantSanctionsScan_Flask.ipynb')
 
 
 # In[ ]:
