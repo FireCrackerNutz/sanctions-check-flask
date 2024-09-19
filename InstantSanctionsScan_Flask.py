@@ -84,8 +84,9 @@ def fetch_html_content_with_selenium(url):
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
 
-    # Use the installed ChromeDriver
-    driver = webdriver.Chrome(executable_path="/usr/local/bin/chromedriver", options=options)
+    # Use the installed ChromeDriver (set to the correct path as specified in render-build.sh)
+    chrome_service = ChromeService(executable_path="/app/.chromedriver/chromedriver")
+    driver = webdriver.Chrome(service=chrome_service, options=options)
 
     driver.get(url)
     html_content = driver.page_source
@@ -93,13 +94,14 @@ def fetch_html_content_with_selenium(url):
     return html_content
 
 def find_dynamic_url_with_selenium(main_page_url):
-    options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # Ensure Chrome runs in headless mode
+    options = Options()
+    options.add_argument("--headless")
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
 
-    # On Render, ChromeDriver will be in the /usr/local/bin directory
-    driver = webdriver.Chrome(options=options)
+    # Use the installed ChromeDriver (set to the correct path as specified in render-build.sh)
+    chrome_service = ChromeService(executable_path="/app/.chromedriver/chromedriver")
+    driver = webdriver.Chrome(service=chrome_service, options=options)
 
     driver.get(main_page_url)
     dynamic_url = None
@@ -112,6 +114,7 @@ def find_dynamic_url_with_selenium(main_page_url):
 
     driver.quit()
     return dynamic_url
+
 
 # Extract text from PDF
 def extract_text_from_pdf(pdf_data, max_pages=5):
@@ -248,7 +251,7 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-# In[58]:
+# In[61]:
 
 
 #get_ipython().system('jupyter nbconvert --to script InstantSanctionsScan_Flask.ipynb')

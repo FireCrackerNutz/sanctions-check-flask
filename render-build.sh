@@ -1,15 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# Install Chrome
+# Update and install dependencies
+sudo apt-get update && sudo apt-get install -y wget unzip apt-transport-https
+
+# Download and install Google Chrome
 wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-apt-get install -y ./google-chrome-stable_current_amd64.deb
+sudo apt-get install -y ./google-chrome-stable_current_amd64.deb
 
-# Install ChromeDriver
-CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
-CHROMEDRIVER_VERSION=$(curl -sS https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION)
-wget -N https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
-unzip chromedriver_linux64.zip -d /usr/local/bin/
+# Get the latest version of chromedriver
+CHROME_DRIVER_VERSION=$(curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE)
+
+# Download and unzip chromedriver
+wget -N https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip
+unzip chromedriver_linux64.zip -d /app/.chromedriver/
 rm chromedriver_linux64.zip
 
-# Clean up
-rm google-chrome-stable_current_amd64.deb
+# Add chromedriver to the PATH
+export PATH=$PATH:/app/.chromedriver/
