@@ -142,15 +142,21 @@ def fetch_html_data(url):
         response.raise_for_status()  # Raise an error for bad responses
         content = []
         for chunk in response.iter_content(chunk_size=8192):
-            # Decode each chunk with error handling to skip invalid characters
-            content.append(chunk.decode('utf-8', errors='replace'))
+            try:
+                content.append(chunk.decode('utf-8', errors='replace'))
+            except UnicodeDecodeError as e:
+                print(f"Error decoding chunk: {e}")
+                continue
         # Combine the chunks into a full HTML text
         full_content = ''.join(content)
-    
-    # Parse the content with BeautifulSoup
-    soup = BeautifulSoup(full_content, 'html.parser')
-    return soup.get_text()  # Extract the text from the HTML
 
+    # Add a try-except block for parsing
+    try:
+        soup = BeautifulSoup(full_content, 'html.parser')
+        return soup.get_text()  # Extract the text from the HTML
+    except Exception as e:
+        print(f"Error parsing HTML content: {e}")
+        return ""  # Return empty content on failure
 
 
 # Extract names from OFAC CSV
@@ -260,7 +266,7 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-# In[79]:
+# In[82]:
 
 
 #get_ipython().system('jupyter nbconvert --to script InstantSanctionsScan_Flask.ipynb')
