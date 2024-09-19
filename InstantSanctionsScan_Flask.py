@@ -215,10 +215,10 @@ def run_sanctions_check(businesses):
     ofac_csv_data = download_file_to_memory(ofac_url)
 
 # Clean up the sanctions names
-ofac_names = clean_names(ofac_names)
-eu_names = clean_names(eu_names)
-uk_names = clean_names(clean_names)
-un_names = clean_names(un_names)
+    ofac_names = clean_names(ofac_names)
+    eu_names = clean_names(eu_names)
+    uk_names = clean_names(clean_names)
+    un_names = clean_names(un_names)
 
 
     ofac_matches = fuzzy_match_names(businesses, ofac_names)
@@ -278,7 +278,7 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-# In[98]:
+# In[102]:
 
 
 #get_ipython().system('jupyter nbconvert --to script InstantSanctionsScan_Flask.ipynb')
