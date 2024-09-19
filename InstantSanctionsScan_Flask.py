@@ -137,10 +137,17 @@ def extract_text_from_pdf(pdf_data, max_pages=5):
 
 #Fetch HTML data
 def fetch_html_data(url):
-    response = requests.get(url, stream=True)  # Stream to avoid memory overload
-    response.raise_for_status()  # Raise an error if the request fails
-
-    soup = BeautifulSoup(response.content, 'html.parser')  # Parse the content with BeautifulSoup
+    # Stream the response to avoid loading everything into memory at once
+    with requests.get(url, stream=True) as response:
+        response.raise_for_status()  # Raise an error for bad responses
+        content = []
+        for chunk in response.iter_content(chunk_size=8192):
+            content.append(chunk.decode('utf-8'))
+        # Combine the chunks into a full HTML text
+        full_content = ''.join(content)
+    
+    # Parse the content with BeautifulSoup
+    soup = BeautifulSoup(full_content, 'html.parser')
     return soup.get_text()  # Extract the text from the HTML
 
 
@@ -217,9 +224,9 @@ def fetch_uk_list():
     uk_url = "https://docs.fcdo.gov.uk/docs/UK-Sanctions-List.html"
 
     # Fetch the HTML from the UK Sanctions List
-    uk_text = fetch_html_data(uk_url)  # Get the text content of the HTML
+    uk_text = fetch_html_data(uk_url)  # Stream the text content of the HTML
 
-    # Now use the original logic to extract names from the text
+    # Extract names from the UK sanctions list text using the existing function
     return extract_names_from_uk_text(uk_text)
 
 
@@ -251,7 +258,7 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-# In[67]:
+# In[76]:
 
 
 #get_ipython().system('jupyter nbconvert --to script InstantSanctionsScan_Flask.ipynb')
