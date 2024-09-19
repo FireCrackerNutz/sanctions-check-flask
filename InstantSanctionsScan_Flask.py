@@ -113,12 +113,23 @@ def find_dynamic_url_with_selenium(main_page_url):
     return dynamic_url
 
 # Extract text from PDF
-def extract_text_from_pdf(pdf_data):
+def extract_text_from_pdf(pdf_data, max_pages=5):
     text = ""
-    with pdfplumber.open(pdf_data) as pdf:
-        for page in pdf.pages:
-            text += page.extract_text()
+    try:
+        with pdfplumber.open(pdf_data) as pdf:
+            total_pages = len(pdf.pages)
+            logging.info(f"Total pages in the PDF: {total_pages}")
+            for page_num, page in enumerate(pdf.pages[:max_pages]):  # Limit pages to max_pages
+                logging.info(f"Extracting text from page {page_num + 1}")
+                page_text = page.extract_text()
+                if page_text is None:
+                    logging.warning(f"No text found on page {page_num + 1}")
+                    continue
+                text += page_text
+    except Exception as e:
+        logging.error(f"Error extracting text from PDF: {str(e)}")
     return text
+
 
 #Fetch HTML data
 def fetch_html_data(url):
@@ -236,7 +247,7 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-# In[51]:
+# In[55]:
 
 
 #get_ipython().system('jupyter nbconvert --to script InstantSanctionsScan_Flask.ipynb')
