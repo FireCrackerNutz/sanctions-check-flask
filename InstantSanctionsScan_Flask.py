@@ -16,6 +16,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.chrome.options import Options
 import os
 
 app = Flask(__name__)
@@ -77,23 +78,28 @@ def download_file_to_memory(url):
 
 # Helper functions for Selenium
 def fetch_html_content_with_selenium(url):
-    options = webdriver.ChromeOptions()
+    options = Options()
     options.add_argument("--headless")
-    chromedriver_path = '/Users/nikolasspence/Library/CloudStorage/OneDrive-EnglebertLimited/Python_Files/chromedriver'  # Update this path
-    driver = webdriver.Chrome(service=ChromeService(chromedriver_path), options=options)
-    
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+
+    # Use the installed ChromeDriver
+    driver = webdriver.Chrome(executable_path="/usr/local/bin/chromedriver", options=options)
+
     driver.get(url)
     html_content = driver.page_source
     driver.quit()
-    
     return html_content
 
 def find_dynamic_url_with_selenium(main_page_url):
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
-    chromedriver_path = '/Users/nikolasspence/Library/CloudStorage/OneDrive-EnglebertLimited/Python_Files/chromedriver'
-    driver = webdriver.Chrome(service=ChromeService(chromedriver_path), options=options)
-    
+    options.add_argument("--headless")  # Ensure Chrome runs in headless mode
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+
+    # On Render, ChromeDriver will be in the /usr/local/bin directory
+    driver = webdriver.Chrome(options=options)
+
     driver.get(main_page_url)
     dynamic_url = None
     a_tags = driver.find_elements(By.TAG_NAME, 'a')
@@ -102,7 +108,7 @@ def find_dynamic_url_with_selenium(main_page_url):
         if href and "en-all.html" in href:
             dynamic_url = href
             break
-    
+
     driver.quit()
     return dynamic_url
 
@@ -230,7 +236,7 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-# In[49]:
+# In[51]:
 
 
 #get_ipython().system('jupyter nbconvert --to script InstantSanctionsScan_Flask.ipynb')
