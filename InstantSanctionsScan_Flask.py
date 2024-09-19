@@ -136,11 +136,21 @@ def extract_text_from_pdf(pdf_data, max_pages=5):
 
 
 #Fetch HTML data
-def fetch_html_data(url):
-    response = requests.get(url)
+def fetch_html_data(url, verify_ssl=True):
+    response = requests.get(url, verify=verify_ssl)
+    
+    # Check if the request was successful
     if response.status_code != 200:
-        raise Exception(f"Failed to fetch data from {url}: {response.status_code}")
-    # Parse the HTML using BeautifulSoup
+        raise Exception(f"Failed to fetch data from {url}. Status code: {response.status_code}")
+    
+    # Log or print the response content to inspect it
+    print(f"Fetched data from {url}. Length of response: {len(response.content)}")
+    
+    # Ensure content is not empty or broken
+    if not response.content:
+        raise Exception(f"No content returned from {url}")
+
+    # Parse with BeautifulSoup
     soup = BeautifulSoup(response.content, 'html.parser')
     return soup
 
@@ -251,7 +261,7 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-# In[61]:
+# In[64]:
 
 
 #get_ipython().system('jupyter nbconvert --to script InstantSanctionsScan_Flask.ipynb')
