@@ -136,23 +136,12 @@ def extract_text_from_pdf(pdf_data, max_pages=5):
 
 
 #Fetch HTML data
-def fetch_html_data(url, verify_ssl=True):
-    response = requests.get(url, verify=verify_ssl)
-    
-    # Check if the request was successful
-    if response.status_code != 200:
-        raise Exception(f"Failed to fetch data from {url}. Status code: {response.status_code}")
-    
-    # Log or print the response content to inspect it
-    print(f"Fetched data from {url}. Length of response: {len(response.content)}")
-    
-    # Ensure content is not empty or broken
-    if not response.content:
-        raise Exception(f"No content returned from {url}")
+def fetch_html_data(url):
+    response = requests.get(url, stream=True)  # Stream to avoid memory overload
+    response.raise_for_status()  # Raise an error if the request fails
 
-    # Parse with BeautifulSoup
-    soup = BeautifulSoup(response.content, 'html.parser')
-    return soup
+    soup = BeautifulSoup(response.content, 'html.parser')  # Parse the content with BeautifulSoup
+    return soup.get_text()  # Extract the text from the HTML
 
 
 # Extract names from OFAC CSV
@@ -168,12 +157,16 @@ def extract_names_from_eu_text(eu_text):
         names.append(match.strip().replace('\n', ' ').strip())
     return names
 
+# Extract names from UK text
 def extract_names_from_uk_text(uk_text):
     names = []
     # Regular expression to extract names from the UK sanctions list
     name_pattern = re.compile(r'Name: ([\w\s,\'-]+)(?= Name Type:|$)', re.IGNORECASE)
+    
+    # Find all matches in the UK sanctions text
     for match in name_pattern.findall(uk_text):
         names.append(match.strip())
+    
     return names
 
 # Extract names from UN HTML
@@ -222,15 +215,12 @@ def fetch_eu_list():
 
 def fetch_uk_list():
     uk_url = "https://docs.fcdo.gov.uk/docs/UK-Sanctions-List.html"
-    
+
     # Fetch the HTML from the UK Sanctions List
-    soup = fetch_html_data(uk_url)  # Ensure this returns a BeautifulSoup object
-    
-    # Extract the text from the parsed HTML
-    uk_data = soup.get_text()  # Extracts the entire text content from the page
-    
-    # Extract names from the UK sanctions list text
-    return extract_names_from_uk_text(uk_data)
+    uk_text = fetch_html_data(uk_url)  # Get the text content of the HTML
+
+    # Now use the original logic to extract names from the text
+    return extract_names_from_uk_text(uk_text)
 
 
 def fetch_un_list():
@@ -261,7 +251,7 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-# In[64]:
+# In[67]:
 
 
 #get_ipython().system('jupyter nbconvert --to script InstantSanctionsScan_Flask.ipynb')
