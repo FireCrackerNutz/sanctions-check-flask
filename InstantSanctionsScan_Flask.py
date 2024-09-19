@@ -115,7 +115,6 @@ def find_dynamic_url_with_selenium(main_page_url):
     driver.quit()
     return dynamic_url
 
-
 # Extract text from PDF
 def extract_text_from_pdf(pdf_data, max_pages=5):
     text = ""
@@ -134,8 +133,7 @@ def extract_text_from_pdf(pdf_data, max_pages=5):
         logging.error(f"Error extracting text from PDF: {str(e)}")
     return text
 
-
-#Fetch HTML data
+# Fetch HTML data
 def fetch_html_data(url):
     # Stream the response to avoid loading everything into memory at once
     with requests.get(url, stream=True) as response:
@@ -157,7 +155,6 @@ def fetch_html_data(url):
     except Exception as e:
         print(f"Error parsing HTML content: {e}")
         return ""  # Return empty content on failure
-
 
 # Extract names from OFAC CSV
 def extract_names_from_ofac_csv(csv_data):
@@ -199,15 +196,19 @@ def extract_names_from_un_html(un_html):
                 names.append(name)
     return names
 
+# Clean and format names
+def clean_names(names):
+    return [name.strip().lower().replace(',', '') for name in names]
+
 # Fetch and process sanctions lists
 def run_sanctions_check(businesses):
     ofac_url = "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.CSV"
     ofac_csv_data = download_file_to_memory(ofac_url)
-    ofac_names = extract_names_from_ofac_csv(ofac_csv_data)
+    ofac_names = clean_names(extract_names_from_ofac_csv(ofac_csv_data))
 
-    eu_names = fetch_eu_list()
-    uk_names = fetch_uk_list()
-    un_names = fetch_un_list()
+    eu_names = clean_names(fetch_eu_list())
+    uk_names = clean_names(fetch_uk_list())
+    un_names = clean_names(fetch_un_list())
 
     ofac_matches = fuzzy_match_names(businesses, ofac_names)
     eu_matches = fuzzy_match_names(businesses, eu_names)
@@ -266,7 +267,7 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-# In[85]:
+# In[88]:
 
 
 #get_ipython().system('jupyter nbconvert --to script InstantSanctionsScan_Flask.ipynb')
