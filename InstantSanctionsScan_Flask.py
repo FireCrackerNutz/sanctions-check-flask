@@ -18,6 +18,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
 import os
+import logging
 
 app = Flask(__name__)
 
@@ -247,7 +248,7 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-# In[55]:
+# In[58]:
 
 
 #get_ipython().system('jupyter nbconvert --to script InstantSanctionsScan_Flask.ipynb')
