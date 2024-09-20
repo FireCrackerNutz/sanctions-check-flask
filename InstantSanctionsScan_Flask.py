@@ -32,17 +32,23 @@ PAGE_ID = "86671364"
 @app.route('/sanctions_check', methods=['GET'])
 def sanctions_check():
     try:
+        logging.debug("Starting sanctions check")
+        
         # Fetch the table from Confluence
         confluence_data = get_confluence_table(PAGE_ID)
+        logging.debug(f"Fetched data from Confluence: {confluence_data}")
         
         # Process fetched data
         businesses = process_business_data(confluence_data)
+        logging.debug(f"Processed business data: {businesses}")
         
         # Fetch and compare sanctions lists
         sanctions_results = run_sanctions_check(businesses)
+        logging.debug(f"Sanctions results: {sanctions_results}")
         
         return jsonify(sanctions_results)
     except Exception as e:
+        logging.error(f"Error during sanctions check: {str(e)}")
         return jsonify({"error": str(e)})
 
 # Function to fetch data from Confluence
@@ -51,12 +57,14 @@ def get_confluence_table(page_id):
     response = requests.get(url, auth=HTTPBasicAuth(CONFLUENCE_USER_EMAIL, CONFLUENCE_API_TOKEN))
     
     if response.status_code != 200:
+        logging.error(f"Failed to fetch data from Confluence: {response.status_code}")
         raise Exception(f"Failed to fetch data from Confluence: {response.status_code}")
     
     data = response.json()
     html_table = data['body']['storage']['value']
     df = pd.read_html(StringIO(html_table))[0]
     
+    logging.debug(f"Confluence table fetched and processed into DataFrame: {df}")
     return df
 
 def process_business_data(table_df):
@@ -211,21 +219,30 @@ def clean_names(names):
 
 # Fetch and process sanctions lists
 def run_sanctions_check(businesses):
-    # Fetch OFAC list
+    logging.debug("Fetching OFAC list")
     ofac_url = "https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.CSV"
     ofac_csv_data = download_file_to_memory(ofac_url)
-    ofac_names = clean_names(extract_names_from_ofac_csv(ofac_csv_data) if ofac_csv_data else [])
+    ofac_names = extract_names_from_ofac_csv(ofac_csv_data)
+    logging.debug(f"OFAC names: {ofac_names[:5]} (first 5 names shown)")
 
-    # Fetch EU, UK, and UN lists
-    eu_names = clean_names(fetch_eu_list() or [])
-    uk_names = clean_names(fetch_uk_list() or [])
-    un_names = clean_names(fetch_un_list() or [])
+    logging.debug("Fetching EU list")
+    eu_names = fetch_eu_list()
+    logging.debug(f"EU names: {eu_names[:5]} (first 5 names shown)")
 
-    # Perform fuzzy matching for each sanctions list
+    logging.debug("Fetching UK list")
+    uk_names = fetch_uk_list()
+    logging.debug(f"UK names: {uk_names[:5]} (first 5 names shown)")
+
+    logging.debug("Fetching UN list")
+    un_names = fetch_un_list()
+    logging.debug(f"UN names: {un_names[:5]} (first 5 names shown)")
+
     ofac_matches = fuzzy_match_names(businesses, ofac_names)
     eu_matches = fuzzy_match_names(businesses, eu_names)
     uk_matches = fuzzy_match_names(businesses, uk_names)
     un_matches = fuzzy_match_names(businesses, un_names)
+    
+    logging.debug("Completed fuzzy matching for all lists")
 
     return {
         "OFAC Matches": ofac_matches,
@@ -276,11 +293,20 @@ def fuzzy_match_names(businesses, sanctions_names, threshold=85):
     
     return matches
 
+# Helper for debugging memory or runtime errors
+def log_memory_usage():
+    import os
+    import psutil
+    process = psutil.Process(os.getpid())
+    mem_info = process.memory_info()
+    logging.debug(f"Memory usage: RSS={mem_info.rss / (1024 * 1024)} MB")
+
 if __name__ == '__main__':
+    logging.debug("Flask app starting")
     app.run(debug=True)
 
 
-# In[105]:
+# In[108]:
 
 
 #get_ipython().system('jupyter nbconvert --to script InstantSanctionsScan_Flask.ipynb')
