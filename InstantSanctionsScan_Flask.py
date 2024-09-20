@@ -19,6 +19,7 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
 import os
 import logging
+import time
 
 app = Flask(__name__)
 
@@ -31,25 +32,28 @@ PAGE_ID = "86671364"
 # Fetch data from Confluence
 @app.route('/sanctions_check', methods=['GET'])
 def sanctions_check():
-    try:
-        logging.debug("Starting sanctions check")
-        
-        # Fetch the table from Confluence
-        confluence_data = get_confluence_table(PAGE_ID)
-        logging.debug(f"Fetched data from Confluence: {confluence_data}")
-        
-        # Process fetched data
-        businesses = process_business_data(confluence_data)
-        logging.debug(f"Processed business data: {businesses}")
-        
-        # Fetch and compare sanctions lists
-        sanctions_results = run_sanctions_check(businesses)
-        logging.debug(f"Sanctions results: {sanctions_results}")
-        
-        return jsonify(sanctions_results)
-    except Exception as e:
-        logging.error(f"Error during sanctions check: {str(e)}")
-        return jsonify({"error": str(e)})
+    start_time = time.time()
+    logging.debug("Starting sanctions check")
+    
+    # Fetch the table from Confluence
+    confluence_data = get_confluence_table(PAGE_ID)
+    logging.debug(f"Fetched data from Confluence: {confluence_data}")
+    
+    # Process fetched data
+    businesses = process_business_data(confluence_data)
+    logging.debug(f"Processed business data: {businesses}")
+    
+    # Measure elapsed time
+    elapsed_time = time.time() - start_time
+    logging.debug(f"Time to fetch Confluence data: {elapsed_time:.2f} seconds")
+    
+    # Fetch and compare sanctions lists
+    sanctions_results = run_sanctions_check(businesses)
+    elapsed_time = time.time() - start_time
+    logging.debug(f"Total time for sanctions check: {elapsed_time:.2f} seconds")
+    
+    return jsonify(sanctions_results)
+
 
 # Function to fetch data from Confluence
 def get_confluence_table(page_id):
@@ -306,7 +310,7 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-# In[108]:
+# In[115]:
 
 
 #get_ipython().system('jupyter nbconvert --to script InstantSanctionsScan_Flask.ipynb')
