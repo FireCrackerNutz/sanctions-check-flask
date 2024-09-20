@@ -37,10 +37,12 @@ def sanctions_check():
         logging.debug("Starting sanctions check")
         
         # Fetch the table from Confluence
+        logging.debug(f"Attempting to fetch Confluence data from PAGE_ID {PAGE_ID}")
         confluence_data = get_confluence_table(PAGE_ID)
         logging.debug(f"Fetched data from Confluence: {confluence_data}")
         
         # Process fetched data
+        logging.debug("Processing business data")
         businesses = process_business_data(confluence_data)
         logging.debug(f"Processed business data: {businesses}")
         
@@ -49,6 +51,7 @@ def sanctions_check():
         logging.debug(f"Time to fetch and process Confluence data: {elapsed_time:.2f} seconds")
         
         # Fetch and compare sanctions lists
+        logging.debug("Running sanctions check against fetched data")
         sanctions_results = run_sanctions_check(businesses)
         logging.debug(f"Sanctions results: {sanctions_results}")
         
@@ -64,19 +67,24 @@ def sanctions_check():
 
 # Function to fetch data from Confluence
 def get_confluence_table(page_id):
-    url = f"{CONFLUENCE_BASE_URL}/rest/api/content/{page_id}?expand=body.storage"
-    response = requests.get(url, auth=HTTPBasicAuth(CONFLUENCE_USER_EMAIL, CONFLUENCE_API_TOKEN))
-    
-    if response.status_code != 200:
-        logging.error(f"Failed to fetch data from Confluence: {response.status_code}")
-        raise Exception(f"Failed to fetch data from Confluence: {response.status_code}")
-    
-    data = response.json()
-    html_table = data['body']['storage']['value']
-    df = pd.read_html(StringIO(html_table))[0]
-    
-    logging.debug(f"Confluence table fetched and processed into DataFrame: {df}")
-    return df
+    try:
+        logging.debug(f"Fetching Confluence page data for page_id: {page_id}")
+        url = f"{CONFLUENCE_BASE_URL}/rest/api/content/{page_id}?expand=body.storage"
+        response = requests.get(url, auth=HTTPBasicAuth(CONFLUENCE_USER_EMAIL, CONFLUENCE_API_TOKEN))
+        
+        if response.status_code != 200:
+            logging.error(f"Failed to fetch data from Confluence: Status code {response.status_code}")
+            raise Exception(f"Failed to fetch data from Confluence: {response.status_code}")
+        
+        data = response.json()
+        logging.debug(f"Confluence response data: {data}")
+        html_table = data['body']['storage']['value']
+        df = pd.read_html(StringIO(html_table))[0]
+        
+        return df
+    except Exception as e:
+        logging.error(f"Error fetching Confluence table: {str(e)}")
+        raise
 
 def process_business_data(table_df):
     businesses = []
@@ -317,7 +325,7 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-# In[120]:
+# In[130]:
 
 
 #get_ipython().system('jupyter nbconvert --to script InstantSanctionsScan_Flask.ipynb')
